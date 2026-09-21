@@ -1,0 +1,86 @@
+import java.util.*;
+
+class Solution {
+    int[][] a;
+    int n;
+    Result[][] dp;
+
+    class Result {
+        long score;
+        List<Integer> list;
+
+        Result(long score, List<Integer> list) {
+            this.score = score;
+            this.list = list;
+        }
+    }
+
+    public int[] maximumWeight(int[][] intervals) {
+        n = intervals.length;
+        a = new int[n][4];
+
+        for (int i = 0; i < n; i++) {
+            a[i] = new int[]{
+                intervals[i][0],
+                intervals[i][1],
+                intervals[i][2],
+                i
+            };
+        }
+
+        Arrays.sort(a, (x, y) -> x[0] - y[0]);
+
+        dp = new Result[n + 1][5];
+
+        Result ans = solve(0, 4);
+
+        int[] result = new int[ans.list.size()];
+
+        for (int i = 0; i < ans.list.size(); i++)
+            result[i] = ans.list.get(i);
+
+        return result;
+    }
+
+    Result solve(int i, int k) {
+        if (i == n || k == 0)
+            return new Result(0, new ArrayList<>());
+
+        if (dp[i][k] != null)
+            return dp[i][k];
+
+        Result skip = solve(i + 1, k);
+
+        int next = i + 1;
+
+        while (next < n && a[next][0] <= a[i][1])
+            next++;
+
+        Result take = solve(next, k - 1);
+
+        List<Integer> list = new ArrayList<>(take.list);
+        list.add(a[i][3]);
+        Collections.sort(list);
+
+        take = new Result(take.score + a[i][2], list);
+
+        if (take.score > skip.score ||
+            (take.score == skip.score &&
+             compare(take.list, skip.list) < 0)) {
+            dp[i][k] = take;
+        } else {
+            dp[i][k] = skip;
+        }
+
+        return dp[i][k];
+    }
+
+    int compare(List<Integer> a, List<Integer> b) {
+        for (int i = 0; i < Math.min(a.size(), b.size()); i++) {
+            if (!a.get(i).equals(b.get(i)))
+                return Integer.compare(a.get(i), b.get(i));
+        }
+
+        return Integer.compare(a.size(), b.size());
+    }
+}
